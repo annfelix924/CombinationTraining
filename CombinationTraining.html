@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>test</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS v5.2.1 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+
+        }
+        #container{
+            padding-left: 5%;
+            padding-right: 5%;
+        }
+        main{
+            margin-left: 5%;
+            margin-right: 5%;
+        }
+    </style>
+
+</head>
+
+<body>
+    <header>
+        <h1 class="display-1 text-center">前端綜合練習</h1>
+    </header>
+    <main>
+        <div class="card">
+            <div class="card-header">
+                <div class="search">
+                    <select id="select">
+                        <option value="none">類型查詢</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="name">
+                    <input type="text" placeholder=" 商品名稱" id="name">
+                    <button id="searchBt">搜尋</button>
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                <div class="price">
+                    價格：<input type="text" placeholder=" 最小值" id="min"> ~ <input type="text" placeholder=" 最大值" id="max">
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <div id="container" class="row"></div>
+
+        <template id="cardTemplate">
+            <div class="col-12 col-md-3 mb-5" card-index="">
+                <div class="card h-100">
+                    <div class="headshot">
+                        <img class="card-img-top" src="https://picsum.photos/200/200/?random=10" alt="...">
+                    </div>
+                    <div class="text p-3">
+                        <h2>ProductName</h2>
+                        價格：<h3>Price</h3>
+                        <div class="content">
+                            剩餘數量：<p id="Amount">Amount</p>
+                            分類：<p id="ProductType">ProductType</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </footer>
+    <!-- Bootstrap JavaScript Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+        integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous">
+        </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js"
+        integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz" crossorigin="anonymous">
+        </script>
+
+
+    <script type="module">
+        import { product } from './product.js';
+
+        //console.log(Object.values(product))
+
+        let bt
+        let container = document.querySelector("#container");
+        let LoLcardTemplate = document.querySelector("#cardTemplate")
+
+        window.onload = function () {
+            product.forEach((data, index) => {
+                container.append(getCard(data.ProductNumber, data.ProductName, data.Amount, data.Price, data.ProductType))
+            })
+
+            selectType()
+
+            bt = document.getElementById('searchBt')
+            bt.onclick = search
+
+        };
+
+
+
+        function getCard(ProductNumber, ProductName, Amount, Price, ProductType) {
+            let cloneCard = LoLcardTemplate.content.cloneNode(true);
+
+            if (Amount == 0) {
+
+                cloneCard.querySelector("h2").innerText = ProductName;
+                cloneCard.querySelector("h3").innerText = Price;
+                cloneCard.querySelector("#Amount").innerText = "售完";
+                cloneCard.querySelector("#ProductType").innerText = ProductType;
+            }
+            else {
+                cloneCard.querySelector("h2").innerText = ProductName;
+                cloneCard.querySelector("h3").innerText = Price;
+                cloneCard.querySelector("#Amount").innerText = Amount;
+                cloneCard.querySelector("#ProductType").innerText = ProductType
+                //cloneCard.querySelector("img").;
+            }
+
+
+            return cloneCard;
+        }
+
+        function selectType() {
+            let select = document.getElementById('select')
+
+            let productType = product.map(data => data.ProductType)
+            let allProductType = [...new Set(productType)]
+
+            allProductType.forEach(data => {
+                let option = document.createElement('option')
+                option.textContent = data
+                option.value = data
+                select.appendChild(option)
+            })
+        }
+
+        function search() {
+
+            let selectedType = document.getElementById('select').value;
+            let name = document.getElementById('name').value.trim();
+            let minPrice = parseFloat(document.getElementById('min').value.trim());
+            let maxPrice = parseFloat(document.getElementById('max').value.trim());
+
+            let filteredProducts = product.filter(p => {
+                if (selectedType !== 'none' && p.ProductType !== selectedType) {
+                    return false;
+                }
+                if (name && !p.ProductName.toLowerCase().includes(name.toLowerCase())) {
+                    return false;
+                }
+                if (!isNaN(minPrice) && p.Price < minPrice) {
+                    return false;
+                }
+                if (!isNaN(maxPrice) && p.Price > maxPrice) {
+                    return false;
+                }
+                return true;
+            });
+
+            //清除原本的內容
+            container.innerHTML = '';
+
+            if (filteredProducts.length == 0) {
+                let noResultMsg = document.createElement('p');
+                noResultMsg.textContent = '未找到商品';
+                container.appendChild(noResultMsg);
+            } else {
+                filteredProducts.forEach(p => {
+                    container.appendChild(getCard(p.ProductNumber, p.ProductName, p.Amount, p.Price, p.ProductType));
+                });
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>
